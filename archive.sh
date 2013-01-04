@@ -106,7 +106,8 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
 
     done < <(find "$top_level_dir" -type f -mtime +"$mtime" -print0)
 
-    # check if over 1GB, otherwise output size in MB format
+    # check if totalsize (measured in kilobytes) is over 1GB.  If so, initialize size in GB, otherwise use MB format
+    # NOTE conversion numbers are GB = KB / 1073741824, MB = KB / 1048576
     if (( totalsize > 1073741824 )); then
         
         size="$(printf '%s\n' "scale=2; $totalsize/1073741824" | bc)"'GB'
@@ -117,6 +118,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
 
     fi
 
+    # output each directory's name and size into the archive body for email
     printf '%-25s %-6s\n' "$bn_dir" "$size" | tee -a "$archive_body"
     
     (( grandtotal += totalsize ))
