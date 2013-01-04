@@ -32,14 +32,14 @@ dirs_to_archive=(
     "${source_base}/India"
     "${source_base}/Labels_Hangtags"
 #    "${source_base}/Labels_Hangtags2"
-#    "${source_base}/Logos_Color Stds"
-#    "${source_base}/Submissions"
-#    "${source_base}/Jerseys"
-#    "${source_base}/Design"
-#    "${source_base}/Design transfer"
-#    "${source_base}/Archives"
-#    "${source_base}/Catalogs"
-#    "${source_base}/Vertis"
+    "${source_base}/Logos_Color Stds"
+    "${source_base}/Submissions"
+    "${source_base}/Jerseys"
+    "${source_base}/Design"
+    "${source_base}/Design transfer"
+    "${source_base}/Archives"
+    "${source_base}/Catalogs"
+    "${source_base}/Vertis"
     )
 
 
