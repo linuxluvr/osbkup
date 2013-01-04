@@ -40,7 +40,7 @@ cat "$main_dir/runtime" >> "$archive_body"
 
 
 # send the mail using mutt (with attachment)
-cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" -a "${archive_log}.bz2" "${mail_to[@]}"
+#cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" -a "${archive_log}.bz2" "${mail_to[@]}"
 
 # send the mail using mutt (without attachment)
 cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
