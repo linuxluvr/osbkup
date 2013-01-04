@@ -28,7 +28,7 @@ mail_subject="Archive Report for $mail_date"
 
 
 # truncate the rsync log to a reasonable size for sending
-/opt/local/bin/bzip2 -kqf "$archive_log"
+# /opt/local/bin/bzip2 -kqf "$archive_log"
 
 
 # print link to download detailed log report CSV files
@@ -39,5 +39,8 @@ printf "\n\n*** RUNTIME STATS ***\n\n" >> "$archive_body"
 cat "$main_dir/runtime" >> "$archive_body"
 
 
-# send the mail using mutt
+# send the mail using mutt (with attachment)
 cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" -a "${archive_log}.bz2" "${mail_to[@]}"
+
+# send the mail using mutt (without attachment)
+cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
