@@ -56,8 +56,10 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
 
     # get naked top level dir
     bn_dir="${top_level_dir##*/}"
+
     # set log file location for dir
     dir_log="${main_dir}/logs/{$bndir}.log"
+
     # initialize log file for top level dir and print header
     [[ -f "$dir_log" ]] && >"$dir_log"
     printf 'filename, owner, group, size, atime, mtime, ctime\n' | tee -a "$dir_log"
@@ -83,6 +85,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         f_owner="${filemeta[4]}"
         f_group="${filemeta[5]}"
         f_filesize="${filemeta[7]}"
+
         # removing the double-quotes on the dates
         f_atime="${filemeta[8]//\"/}"
         f_mtime="${filemeta[9]//\"/}"
