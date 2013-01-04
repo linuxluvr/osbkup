@@ -58,7 +58,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
     bn_dir="${top_level_dir##*/}"
 
     # set log file location for dir
-    dir_log="${main_dir}/logs/{$bn_dir}.log"
+    dir_log="${main_dir}/logs/${bn_dir}.log"
 
     # initialize log file for top level dir and print header
     [[ -f "$dir_log" ]] && >"$dir_log"
