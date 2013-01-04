@@ -31,6 +31,9 @@ mail_subject="Archive Report for $mail_date"
 /opt/local/bin/bzip2 -kqf "$archive_log"
 
 
+# print link to download detailed log report CSV files
+printf "\n\nFor a detailed CSV breakdown by directory, please visit the OSXServer directory /opt/osbkup/logs\n\n" >> "$archive_body"
+
 # print the total runtime to the archive_body
 printf "\n\n*** RUNTIME STATS ***\n\n" >> "$archive_body"
 cat "$main_dir/runtime" >> "$archive_body"
