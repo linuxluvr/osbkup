@@ -1,0 +1,40 @@
+#!/bin/bash
+
+set -u
+set -e
+
+
+# Global script variables here
+main_dir='/opt/osbkup'
+
+
+# Set date/time variables
+mail_date=$(date "+%m-%d-%y")
+
+
+# setup filehandles
+archive_body="$main_dir/archive_body"
+archive_log="$main_dir/archive.log"
+
+
+# Set email parameters
+#mail_to=("ghalevy@gmail.com")
+mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
+mail_cc='ameir@outerstuff.com'
+#mail_cc='walker@designtechnyc.com,sjaradi@me.com,ameir@outerstuff.com'
+#mail_cc='caghal@gmail.com'
+mail_from='osarchive@outerstuff.com'
+mail_subject="Archive Report for $mail_date"
+
+
+# truncate the rsync log to a reasonable size for sending
+/opt/local/bin/bzip2 -kqf "$archive_log"
+
+
+# print the total runtime to the archive_body
+printf "\n\n*** RUNTIME STATS ***\n\n" >> "$archive_body"
+cat "$main_dir/runtime" >> "$archive_body"
+
+
+# send the mail using mutt
+cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" -a "${archive_log}.bz2" "${mail_to[@]}"
