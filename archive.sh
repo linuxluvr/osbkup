@@ -11,9 +11,10 @@ mytee () {
 }
 
 # script options
+# set number of days threshold to do archiving for 
 mtime=730
 
-# setup base dirs
+# setup base directories
 main_dir='/opt/osbkup'
 source_base='/Volumes/9TB_SAN/New Structure'
 target_base='/Volumes/Drobo/OSArchive'
@@ -43,18 +44,20 @@ dirs_to_archive=(
     )
 
 
-# begin looping
+# Set grandtotal (sum of space savings from ALL dirs) to 0
 grandtotal=0
 
 printf "Files not modified in the past %s days\n\n" "$mtime" | tee -a "$archive_body"
 printf '%-25s %-6s\n' "DIRECTORY" "SIZE" | tee -a "$archive_body"
 printf '%-25s %-6s\n' "---------" "----" | tee -a "$archive_body"
 
+# begin looping over dirs and processing
 for top_level_dir in "${dirs_to_archive[@]}"; do
 
+    # set totalsize of dir space saved to 0
     totalsize=0
 
-    # get naked top level dir
+    # get basename (naked) top level dir
     bn_dir="${top_level_dir##*/}"
 
     # set log file location for dir
