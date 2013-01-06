@@ -58,7 +58,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
     bn_dir="${top_level_dir##*/}"
 
     # set log file location for dir
-    dir_log="${main_dir}/logs/${bn_dir}.log"
+    dir_log="${main_dir}/logs/${bn_dir}.csv"
 
     # initialize log file for top level dir and print header
     [[ -f "$dir_log" ]] && >"$dir_log"
@@ -75,6 +75,9 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         target_file="${target_base}/${file#"$source_base"}"
         target_dir="${target_file%/*}"
         filepath_relative="${file#"$source_base"}"
+        filepath_relative="${file#"$source_base"}"
+        filename_extension="${file##*.}"
+        filename_bn="${file##*/}"
 
 
         # generate a parseable stat output for variable initialization
@@ -95,8 +98,8 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         (( totalsize += f_filesize ))
 
         # print out the files and attributes in a parseable format to each directory's dedicated dir_log file
-        printf "'%s', %s, %s, %s, %s, %s, %s\n" \
-        "$filepath_relative" "$f_owner" "$f_group" "$f_filesize" "$f_atime" "$f_mtime" "$f_ctime" | tee -a "$dir_log"
+        printf "'%s', %s, %s, %s, %s, %s, %s, %s, %s\n" \
+        "$filepath_relative" "$filename_bn" "$filename_extension" "$f_owner" "$f_group" "$f_filesize" "$f_atime" "$f_mtime" "$f_ctime" | tee -a "$dir_log"
 
         # do my bidding
         #mkdir -p "$target_dir" \
