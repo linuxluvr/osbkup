@@ -1,10 +1,14 @@
 #!/bin/bash
-shopt -s extglob
 
+# script options
+shopt -s extglob
 set -e
 set -u
 
-# functions
+## Globals
+main_dir='/opt/osbkup'
+
+## BEGIN FUNCTIONS 
 mytee () { 
 
     tee -a "$archive_body" "$archive_log" 
@@ -12,29 +16,41 @@ mytee () {
 }
 
 
-# Main Menu 
+reset_vars () {
+
+source_base=
+target_base=
+dirs_file=
+mtime_days=
+report_mode=
+
+#script_vars=('dirs_file' 'report_mode' 'mtime_days' 'target_base')   
+#
+#for svar in "${script_vars[@]}"; do "$svar"=''; done
+
+} 
 
 main_menu () {
 
-    clear
+#    clear
 
-    cat <<-EOT
+cat <<-EOT
 
-    *************************************************************
+*************************************************************
 
-        Main Menu:
+    Main Menu:
 
-        1. Use default settings
-        2. Use custom settings
-    
-        9. Exit 
+    1. Use default settings
+    2. Use custom settings
 
-    *************************************************************
+    9. Exit
 
-    EOT
+*************************************************************
 
+EOT
+
+    echo
     read -n 1 -p "Please select a choice from above: " main_menu_choice
-    
     echo
 
     eval_main_menu_choice
@@ -49,14 +65,16 @@ eval_main_menu_choice () {
         1) # use default settings
             source_base='/Volumes/9TB_SAN/New Structure'
             target_base='/Volumes/Drobo/OSArchive'
+            dirs_file="${main_dir}/default_dirs.txt"
+            mtime_days=730
             ;;
 
         2) # Use custom settings
             until [[ -r "$dirs_file" ]]; do read -p "Enter path to file containing directories to archive (newline separated)? " dirs_file; done
             until [[ -d "$target_base" && -w "$target_base" ]]; do
-                read -p "Enter path to target base where we should archive (must be accessible and writeable)  " target_base;
+                read -p "Target base directory to archive to (full path, should be writeable): " target_base;
             done
-            until [[ -n "$mtime_days" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
+            while [[ "$mtime_days" = *[!0-9]* || "$mtime_days" = "" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
             ;;
 
         9) # Exit
@@ -69,19 +87,49 @@ eval_main_menu_choice () {
 
 }
 
-# collect options and parameters
 
-until [[ -n "$dirs_file" ]]; do read -p "Enter path to file containing directories to archive (newline separated)? " dirs_file; done
-until [[ -n "$report_mode" ]]; do read -p "Report mode (yes/no)? " report_mode; done
-until [[ -n "$mtime_days" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
-until [[ -n "$target_base" ]]; do read -p "Archive threshold (in days)? " target_base; done
+validate_params () {
+
+    clear
+
+cat <<-EOT
+
+*************************************************************
+
+SETTINGS
+
+Report Mode: $(printf '%s' "$report_mode")
+Directories to Archive:
+$(cat "$dirs_file")
+Target Base: $(printf '%s' "$target_base")
+Threshold (in days): $(printf '%s' "$mtime_days")
+    
+
+*************************************************************
+
+EOT
+
+    read -n 1 -p "Confirm Settings (y/n)?" confirm_settings
+    [[ "$confirm_settings" = "y" ]] || main_menu
+
+}
+
+reset_vars
+main_menu
+validate_params
+exit 0
+
+## END FUNCTIONS
+
+
+# Validate parameters before continuing
+
 
 # script options
 # set number of days threshold to do archiving for 
-mtime=730
+mtime="$mtime_days"
 
 # setup base directories
-main_dir='/opt/osbkup'
 source_base='/Volumes/9TB_SAN/New Structure'
 #target_base='/Volumes/Drobo/OSArchive'
 
@@ -113,7 +161,7 @@ dirs_to_archive=(
 # Set grandtotal (sum of space savings from ALL dirs) to 0
 grandtotal=0
 
-printf "Files not modified in the past %s days\n\n" "$mtime" | tee -a "$archive_body"
+printf "Files not modified in the past %s days\n\n" "$mtime_days" | tee -a "$archive_body"
 printf '%-25s %-6s\n' "DIRECTORY" "SIZE" | tee -a "$archive_body"
 printf '%-25s %-6s\n' "---------" "----" | tee -a "$archive_body"
 
@@ -176,7 +224,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         #&& chmod 0444 "$target_file" \
         #&& ln -s "$target_file" "$source_dir"
 
-    done < <(find "$top_level_dir" -type f -mtime +"$mtime" -print0)
+    done < <(find "$top_level_dir" -type f -mtime +"$mtime_days" -print0)
 
     # check if totalsize (measured in kilobytes) is over 1GB.  If so, initialize size in GB, otherwise use MB format
     # NOTE conversion numbers are GB = KB / 1073741824, MB = KB / 1048576
