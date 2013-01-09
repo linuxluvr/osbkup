@@ -71,7 +71,7 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
 
     # initialize log file for top level dir and print header
     [[ -f "$dir_log" ]] && >"$dir_log"
-    printf 'filename, owner, group, size, atime, mtime, ctime\n' | tee -a "$dir_log"
+    printf 'filepath, file, extension,  owner, group, size, atime, mtime, ctime\n' | tee -a "$dir_log"
 
     # top banner for stdout on console
     printf "### BEGIN PROCESSING '%s' ###\n" "$top_level_dir"
