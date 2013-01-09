@@ -10,6 +10,12 @@ mytee () {
 
 }
 
+
+# collect options and parameters
+until [[ -n "$report_mode" ]]; do read -p "Report mode (yes/no)? " report_mode; done
+until [[ -n "$report_mode" ]]; do read -p "Archive threshold (in days)? " report_mode; done
+
+
 # script options
 # set number of days threshold to do archiving for 
 mtime=730
