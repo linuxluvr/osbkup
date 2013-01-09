@@ -1,4 +1,5 @@
 #!/bin/bash
+shopt -s extglob
 
 set -e
 set -u
@@ -11,10 +12,69 @@ mytee () {
 }
 
 
-# collect options and parameters
-until [[ -n "$report_mode" ]]; do read -p "Report mode (yes/no)? " report_mode; done
-until [[ -n "$report_mode" ]]; do read -p "Archive threshold (in days)? " report_mode; done
+# Main Menu 
 
+main_menu () {
+
+    clear
+
+    cat <<-EOT
+
+    *************************************************************
+
+        Main Menu:
+
+        1. Use default settings
+        2. Use custom settings
+    
+        9. Exit 
+
+    *************************************************************
+
+    EOT
+
+    read -n 1 -p "Please select a choice from above: " main_menu_choice
+    
+    echo
+
+    eval_main_menu_choice
+
+}
+
+
+eval_main_menu_choice () {
+
+    case "$main_menu_choice" in
+
+        1) # use default settings
+            source_base='/Volumes/9TB_SAN/New Structure'
+            target_base='/Volumes/Drobo/OSArchive'
+            ;;
+
+        2) # Use custom settings
+            until [[ -r "$dirs_file" ]]; do read -p "Enter path to file containing directories to archive (newline separated)? " dirs_file; done
+            until [[ -d "$target_base" && -w "$target_base" ]]; do
+                read -p "Enter path to target base where we should archive (must be accessible and writeable)  " target_base;
+            done
+            until [[ -n "$mtime_days" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
+            ;;
+
+        9) # Exit
+            exit 0
+            ;;
+
+    esac
+            
+    until [[ "$report_mode" = @(yes|no) ]]; do read -p "Run in Report-only mode (yes/no)? " report_mode; done
+
+}
+
+# collect options and parameters
+
+until [[ -n "$dirs_file" ]]; do read -p "Enter path to file containing directories to archive (newline separated)? " dirs_file; done
+until [[ -n "$report_mode" ]]; do read -p "Report mode (yes/no)? " report_mode; done
+until [[ -n "$mtime_days" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
+until [[ -n "$target_base" ]]; do read -p "Archive threshold (in days)? " target_base; done
 
 # script options
 # set number of days threshold to do archiving for 
@@ -23,7 +83,7 @@ mtime=730
 # setup base directories
 main_dir='/opt/osbkup'
 source_base='/Volumes/9TB_SAN/New Structure'
-target_base='/Volumes/Drobo/OSArchive'
+#target_base='/Volumes/Drobo/OSArchive'
 
 # setup filehandles
 archive_body="${main_dir}/archive_body"
