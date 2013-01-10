@@ -1,0 +1,159 @@
+#!/bin/bash
+
+## ===============================================================================
+## This is a backup script for OSNYMAC XServer files.  It should be
+## run out of cron daily.  It creates backups directly on osnjnas01.
+##
+## Features to add:
+## 	* Old archives will be truncated and removed after 7 days.
+##
+## For any maintenance requests, contact Gilad Halevy.ghalevy@gmail.com
+##
+## Last update: 08/06/2012
+## Last modified by: GH
+## Update comments:
+## ===============================================================================
+
+set -u
+set -e
+
+
+# Global script variables here
+#rsync_target_base = 'rsync@osnjnas01::NEWSTRUCTURE'
+main_dir='/opt/osbkup'
+rsync_source_base='/Volumes/OSRaidSet/New Structure'
+rsync_target_base='admin@osnjnas01:/share/MD0_DATA/share/REMOTENYMACBKUP/New\ Structure'
+
+# Set date/time variables
+mail_date=$(date "+%m-%d-%y")
+
+# setup filehandles
+mail_body='/opt/osbkup/mail_body'
+rsync_log='/opt/osbkup/osbkup.log'
+[[ -f $mail_body ]] && >$mail_body
+[[ -f $rsync_log ]] && >$rsync_log
+
+
+# define the directories to backup here
+dirs_to_bkup=(
+    "Reference Numbers"
+    "Fonts"
+    "Samples"
+    "India"
+    "Labels_Hangtags"
+    "Logos_Color Stds"
+    "Samples"
+    "Submissions"
+    "Jerseys"
+    "Design"
+    "Archives"
+    )
+    #'Submissions',
+    #'Jerseys',
+    #'Design',
+    #'Archives',
+
+
+mytee () {
+
+    tee -a $mail_body $rsync_log
+
+}
+
+
+backup_server () {
+
+    # Begin the backup process for the server
+
+    echo -e "\n### BEGIN BACKUP - $(date) ###" | mytee
+
+    for current_bkup_dir in "${dirs_to_bkup[@]}"; do
+
+        # does the path exist?
+        source_path="$rsync_source_base/$current_bkup_dir"
+        if [[ ! -d $source_path ]]; then
+
+            echo -e "Error Backing up '"$current_bkup_dir"'" | mytee
+            continue
+
+        else
+
+            # Begin backup of directory
+            echo -e "\n\n======== BEGIN backup of '"$current_bkup_dir"' - $(date) ========" | mytee
+
+            # setup the rsync parameters
+            exclusions='--exclude-from=/opt/osbkup/excludes'
+
+            # set the rsync flags below
+            rsync_flags=(
+                        "--recursive"
+                        "--perms"
+                        "--links"
+                        "--owner"
+                        "--times"
+                        "--verbose"
+                        "--group"
+                        "--devices"
+                        "--specials"
+                        "--numeric-ids"
+                        "--compress"
+                        "--compress-level=1"
+                        "--human-readable"
+                        "--partial"
+                        "--inplace"
+                        "--stats"
+                        "-E"
+                        )
+                        # Unused parameters
+                        #--progress \
+                        #--dry-run \
+                        #--size-only \
+                        #--ignore-existing \
+                        #--itemize-changes \
+                        #--password-file=/etc/rsyncd.passwd \
+                        #--delete \
+                        #--delete-after \
+                        #--delete-excluded \
+
+            # run the rsync job
+            rsync "${rsync_flags[@]}" $exclusions "$source_path" "$rsync_target_base" | tee -a "$rsync_log"
+
+            if [[ $? -eq 0 ]]; then
+
+                echo -e "======== END backup of '"$current_bkup_dir"' - $(date) ========" | mytee
+
+            fi
+
+        fi
+
+    done
+
+    # at this point we are done backing up the current server
+    echo -e "\n### COMPLETED BACKUP - $(date) ###\n" | mytee
+
+}
+
+
+send_mailreport () {
+
+    # Set email parameters
+    #mail_server = localhost
+    mail_to='elid@outerstuff.com'
+    mail_cc='ghalevy@gmail.com'
+    #mail_cc='caghal@gmail.com'
+    mail_from='osbkup@outerstuff.com'
+    mail_subject="Daily Backup Report for $mail_date"
+
+    # truncate the rsync log to a reasonable size for sending
+    rsync_log_bz2="$main_dir/rsynclog.log.bz2"
+    bzip2 -c "$rsync_log" > $rsync_log_bz2
+
+    # send the mail using mutt
+    cat "$mail_body" | mutt -s "$mail_subject" -c $mail_cc -a "$rsync_log_bz2" $mail_to | mytee
+
+}
+
+
+# Begin backup process
+backup_server
+send_mailreport
