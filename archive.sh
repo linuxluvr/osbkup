@@ -255,8 +255,10 @@ run_script () {
     # print grandtotal to mail body
     printf '\n%-25s %-6s\n' "TOTAL SAVINGS" "$grandtotal_gb" | tee -a "$archive_body"
 
-#    runtime
+    # mail the report?
     [[ $email_report = "yes" ]] && mail_the_report
+
+    exit 0
 }
 
 mail_the_report () {
