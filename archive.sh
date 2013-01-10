@@ -7,6 +7,13 @@ set -u
 
 ## Globals
 main_dir='/opt/osbkup'
+log_dir="${main_dir}/logs"
+archive_body="${main_dir}/archive_body"
+archive_log="${main_dir}/archive.log"
+[[ -f "$archive_body" ]] && >"$archive_body"
+[[ -f "$archive_log" ]] && >"$archive_log"
+[[ -d "$log_dir" ]] || mkdir -p "$log_dir"
+
 
 ## BEGIN FUNCTIONS 
 mytee () { 
@@ -15,24 +22,19 @@ mytee () {
 
 }
 
-
 reset_vars () {
 
-source_base=
-target_base=
-dirs_file=
-mtime_days=
-report_mode=
-
-#script_vars=('dirs_file' 'report_mode' 'mtime_days' 'target_base')   
-#
-#for svar in "${script_vars[@]}"; do "$svar"=''; done
+    source_base=
+    target_base=
+    dirs_file=
+    mtime_days=
+    report_mode=
 
 } 
 
 main_menu () {
 
-#    clear
+    clear
 
 cat <<-EOT
 
@@ -63,23 +65,28 @@ eval_main_menu_choice () {
     case "$main_menu_choice" in
 
         1) # use default settings
-            source_base='/Volumes/9TB_SAN/New Structure'
-            target_base='/Volumes/Drobo/OSArchive'
+            target_base='/opt/osbkup/baz'
             dirs_file="${main_dir}/default_dirs.txt"
             mtime_days=730
             ;;
 
-        2) # Use custom settings
-            until [[ -r "$dirs_file" ]]; do read -p "Enter path to file containing directories to archive (newline separated)? " dirs_file; done
+        2) # collect and use custom settings
+
+            until [[ -r "$dirs_file" ]]; do read -rp "Enter full path to a file containing directories to archive (newline separated)? " dirs_file; done
+
             until [[ -d "$target_base" && -w "$target_base" ]]; do
                 read -p "Target base directory to archive to (full path, should be writeable): " target_base;
             done
+
             while [[ "$mtime_days" = *[!0-9]* || "$mtime_days" = "" ]]; do read -p "Archive threshold (in days)? " mtime_days; done
             ;;
 
         9) # Exit
             exit 0
             ;;
+
+        *) # all else
+           main_menu 
 
     esac
             
@@ -90,72 +97,59 @@ eval_main_menu_choice () {
 
 validate_params () {
 
-    clear
+clear
 
 cat <<-EOT
 
 *************************************************************
 
-SETTINGS
+--- SETTINGS ---
 
-Report Mode: $(printf '%s' "$report_mode")
+Report Mode: ${report_mode}
+
 Directories to Archive:
 $(cat "$dirs_file")
-Target Base: $(printf '%s' "$target_base")
-Threshold (in days): $(printf '%s' "$mtime_days")
-    
+
+Target Base: ${target_base}
+
+Threshold (in days): ${mtime_days}
 
 *************************************************************
 
 EOT
 
-    read -n 1 -p "Confirm Settings (y/n)?" confirm_settings
-    [[ "$confirm_settings" = "y" ]] || main_menu
+read -n 1 -p "Confirm Settings (y/n)?" confirm_settings
+[[ "$confirm_settings" = "y" ]] || main_menu
 
 }
 
-reset_vars
-main_menu
-validate_params
-exit 0
+
+do_my_bidding () {
+
+        mkdir -p "$target_dir" \
+        && mv "$file" "$target_dir" \
+        && chmod 0444 "$target_file" \
+        && ln -s "$target_file" "$source_dir"
+
+}
 
 ## END FUNCTIONS
 
 
-# Validate parameters before continuing
+# Call and run functions
+reset_vars
+main_menu
+validate_params
 
 
-# script options
-# set number of days threshold to do archiving for 
-mtime="$mtime_days"
+# read in the text file containing the directories to archive, store in the array dirs_to_archive
+declare -a dirs_to_archive
 
-# setup base directories
-source_base='/Volumes/9TB_SAN/New Structure'
-#target_base='/Volumes/Drobo/OSArchive'
+while IFS= read -r a_dir; do
 
-# setup filehandles
-archive_body="${main_dir}/archive_body"
-archive_log="${main_dir}/archive.log"
-[[ -f "$archive_body" ]] && >"$archive_body"
-[[ -f "$archive_log" ]] && >"$archive_log"
+    dirs_to_archive+=("$a_dir")
 
-# define the dirs to archive
-dirs_to_archive=(
-    "${source_base}/Reference Numbers"
-    "${source_base}/Fonts"
-    "${source_base}/Samples"
-    "${source_base}/India"
-    "${source_base}/Labels_Hangtags"
-#    "${source_base}/Labels_Hangtags2"
-    "${source_base}/Logos_Color Stds"
-    "${source_base}/Submissions"
-    "${source_base}/Jerseys"
-    "${source_base}/Design"
-    "${source_base}/Design transfer"
-    "${source_base}/Archives"
-    "${source_base}/Catalogs"
-    "${source_base}/Vertis"
-    )
+done < "$dirs_file"
 
 
 # Set grandtotal (sum of space savings from ALL dirs) to 0
@@ -171,11 +165,14 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
     # set totalsize of dir space saved to 0
     totalsize=0
 
+    # get dirname (source base)
+    source_base="${top_level_dir%/*}"
+
     # get basename (naked) top level dir
     bn_dir="${top_level_dir##*/}"
 
     # set log file location for dir
-    dir_log="${main_dir}/logs/${bn_dir}.csv"
+    dir_log="${log_dir}/${bn_dir}.csv"
 
     # initialize log file for top level dir and print header
     [[ -f "$dir_log" ]] && >"$dir_log"
@@ -191,7 +188,6 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         source_dir="${file%/*}"
         target_file="${target_base}/${file#"$source_base"}"
         target_dir="${target_file%/*}"
-        filepath_relative="${file#"$source_base"}"
         filepath_relative="${file#"$source_base"}"
         filename_extension="${file##*.}"
         filename_bn="${file##*/}"
@@ -218,11 +214,10 @@ for top_level_dir in "${dirs_to_archive[@]}"; do
         printf "'%s', %s, %s, %s, %s, %s, %s, %s, %s\n" \
         "$filepath_relative" "$filename_bn" "$filename_extension" "$f_owner" "$f_group" "$f_filesize" "$f_atime" "$f_mtime" "$f_ctime" | tee -a "$dir_log"
 
-        # do my bidding
-        #mkdir -p "$target_dir" \
-        #&& mv "$file" "$target_dir" \
-        #&& chmod 0444 "$target_file" \
-        #&& ln -s "$target_file" "$source_dir"
+        # Are we running in report_only mode
+        if [[ $report_mode = "no" ]]; then
+            do_my_bidding
+        fi 
 
     done < <(find "$top_level_dir" -type f -mtime +"$mtime_days" -print0)
 

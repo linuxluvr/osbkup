@@ -1,13 +1,4 @@
-Reference Numbers
-Fonts
-Samples
-India
-Labels_Hangtags
-Logos_Color Stds
-Submissions
-Jerseys
-Design
-Design transfer
-Archives
-Catalogs
-Vertis
+/opt/osbkup/foo/a dir
+/opt/osbkup/foo/b dir
+/opt/osbkup/foo/cdir
+/opt/osbkup/foo/d dir
