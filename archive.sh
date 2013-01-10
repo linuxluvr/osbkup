@@ -276,7 +276,7 @@ run_script () {
     printf '\n%-25s %-6s\n' "TOTAL SAVINGS" "$grandtotal_gb" | tee -a "$archive_body"
 
     # are we emailing the report?
-    [[ $email_report = "yes" ]] && mail_the_report
+    [[ $email_report = "y" ]] && mail_the_report
 
     # WE ARE DONE WITH THE SCRIPT HERE, EXIT CLEAN
     exit 0
