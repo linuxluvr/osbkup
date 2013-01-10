@@ -139,6 +139,119 @@ do_my_bidding () {
 
 }
 
+run_script () {
+
+# read in the text file containing the directories to archive, store in the array dirs_to_archive
+    declare -a dirs_to_archive
+
+    while IFS= read -r a_dir; do
+
+        dirs_to_archive+=("$a_dir")
+
+    done < "$dirs_file"
+
+
+    # Set grandtotal (sum of space savings from ALL dirs) to 0
+    grandtotal=0
+
+    printf "Files not modified in the past %s days\n\n" "$mtime_days" | tee -a "$archive_body"
+    printf '%-25s %-6s\n' "DIRECTORY" "SIZE" | tee -a "$archive_body"
+    printf '%-25s %-6s\n' "---------" "----" | tee -a "$archive_body"
+
+    # begin looping over dirs and processing
+    for top_level_dir in "${dirs_to_archive[@]}"; do
+
+        # set totalsize of dir space saved to 0
+        totalsize=0
+
+        # get dirname (source base)
+        source_base="${top_level_dir%/*}"
+
+        # get basename (naked) top level dir
+        bn_dir="${top_level_dir##*/}"
+
+        # set log file location for dir
+        dir_log="${log_dir}/${bn_dir}.csv"
+
+        # initialize log file for top level dir and print header
+        [[ -f "$dir_log" ]] && >"$dir_log"
+        printf 'filepath, file, extension,  owner, group, size, atime, mtime, ctime\n' | tee -a "$dir_log"
+
+        # top banner for stdout on console
+        printf "### BEGIN PROCESSING '%s' ###\n" "$top_level_dir"
+
+        # read in the results of find, tally size, create target dir, mv file, make read only, create symlink
+        while IFS= read -rd '' file; do
+
+            # setup parameters for use inside loop, self explanatory.  Filepath_relative strips out leading /Volumes/9TB_SAN/New Structure...
+            source_dir="${file%/*}"
+            target_file="${target_base}/${file#"$source_base"}"
+            target_dir="${target_file%/*}"
+            filepath_relative="${file#"$source_base"}"
+            filename_extension="${file##*.}"
+            filename_bn="${file##*/}"
+
+
+            # generate a parseable stat output for variable initialization
+            stat_out="$(stat -t "%Y-%m-%d_%H:%M" "$file")"
+
+            # read the output of stat_out into an array we can use to parse attributes
+            read -r -a filemeta <<< "$stat_out"
+            f_owner="${filemeta[4]}"
+            f_group="${filemeta[5]}"
+            f_filesize="${filemeta[7]}"
+
+            # removing the double-quotes on the dates
+            f_atime="${filemeta[8]//\"/}"
+            f_mtime="${filemeta[9]//\"/}"
+            f_ctime="${filemeta[10]//\"/}"
+
+            # update totalsize calculation as we process
+            (( totalsize += f_filesize ))
+
+            # print out the files and attributes in a parseable format to each directory's dedicated dir_log file
+            printf "'%s', %s, %s, %s, %s, %s, %s, %s, %s\n" \
+            "$filepath_relative" "$filename_bn" "$filename_extension" "$f_owner" "$f_group" "$f_filesize" "$f_atime" "$f_mtime" "$f_ctime" | tee -a "$dir_log"
+
+            # Are we running in report_only mode
+            if [[ $report_mode = "yes" ]]; then
+                continue
+            elif [[ $report_mode = "no" ]]; then
+                do_my_bidding
+            fi 
+
+        done < <(find "$top_level_dir" -type f -mtime +"$mtime_days" -print0)
+
+        # check if totalsize (measured in kilobytes) is over 1GB.  If so, initialize size in GB, otherwise use MB format
+        # NOTE conversion numbers are GB = KB / 1073741824, MB = KB / 1048576
+        if (( totalsize > 1073741824 )); then
+            
+            size="$(printf '%s\n' "scale=2; $totalsize/1073741824" | bc)"'GB'
+
+        else
+
+            size="$(printf '%s\n' "scale=0; $totalsize/1048576" | bc)"'MB'
+
+        fi
+
+        # output each directory's name and size into the archive body for email
+        printf '%-25s %-6s\n' "$bn_dir" "$size" | tee -a "$archive_body"
+        
+        (( grandtotal += totalsize ))
+
+        # bottom banner for stdout on console
+        printf "### END PROCESSING '%s' ###\n" "$top_level_dir"
+
+    done
+
+    # calculate and output grand total numbers
+    grandtotal_gb="$(printf '%s\n' "scale=2; $grandtotal/1073741824" | bc)"'GB'
+
+    # print grandtotal to mail body
+    printf '\n%-25s %-6s\n' "TOTAL SAVINGS" "$grandtotal_gb" | tee -a "$archive_body"
+
+}
+
 ## END FUNCTIONS
 
 
