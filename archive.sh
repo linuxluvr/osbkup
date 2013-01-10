@@ -29,6 +29,7 @@ reset_vars () {
     dirs_file=
     mtime_days=
     report_mode=
+    email_report=
 
 } 
 
@@ -68,7 +69,7 @@ eval_main_menu_choice () {
 
         1) # use default settings
             target_base='/Volumes/Drobo/OSArchive'
-            dirs_file="${main_dir}/default_dirs.txt"
+            dirs_file="${main_dir}/my_dirs.txt"
             mtime_days=730
             ;;
 
@@ -92,7 +93,8 @@ eval_main_menu_choice () {
 
     esac
             
-    until [[ "$report_mode" = @(yes|no) ]]; do read -p "Run in Report-only mode (yes/no)? " report_mode; done
+    until [[ "$report_mode" = @(yes|no) ]]; do read -p "Run in Report-only mode - No changes to the system will be made (yes/no)? " report_mode; done
+    until [[ "$email_report" = @(yes|no) ]]; do read -p "Send email report (yes/no)? " email_report; done
 
     validate_params
 
@@ -107,9 +109,7 @@ cat <<-EOT
 
 *************************************************************
 
---- SETTINGS ---
-
-Report Mode: ${report_mode}
+Please confirm the following settings:
 
 Directories to Archive:
 $(cat "$dirs_file")
@@ -118,11 +118,15 @@ Target Base: ${target_base}
 
 Threshold (in days): ${mtime_days}
 
+Report Mode: ${report_mode}
+
+Send Email Report: ${email_report}
+
 *************************************************************
 
 EOT
 
-read -n 1 -p "Confirm Settings (y/n)?" confirm_settings
+read -p "Confirm Settings (y/n)?" confirm_settings
 [[ "$confirm_settings" = "y" ]] || main_menu
 
 run_script
@@ -141,6 +145,7 @@ do_my_bidding () {
 
 run_script () {
 
+    begin_time=$(date "+%s")
 # read in the text file containing the directories to archive, store in the array dirs_to_archive
     declare -a dirs_to_archive
 
@@ -250,7 +255,40 @@ run_script () {
     # print grandtotal to mail body
     printf '\n%-25s %-6s\n' "TOTAL SAVINGS" "$grandtotal_gb" | tee -a "$archive_body"
 
+#    runtime
+    [[ $email_report = "yes" ]] && mail_the_report
 }
+
+mail_the_report () {
+
+    # Set date/time variables
+    mail_date=$(date "+%m-%d-%y")
+
+    # Set email parameters
+    mail_to=("ghalevy@gmail.com")
+    #mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
+    #mail_cc='ameir@outerstuff.com'
+    #mail_cc='walker@designtechnyc.com,sjaradi@me.com,ameir@outerstuff.com'
+    mail_cc='caghal@gmail.com'
+    mail_from='osarchive@outerstuff.com'
+    mail_subject="Archive Report for $mail_date"
+
+    # print link to download detailed log report CSV files
+    printf "\n\nFor a detailed CSV breakdown by directory, please visit the OSXServer directory http://osxserve/logs/ or http://192.168.168.13/logs/\n\n" >> "$archive_body"
+
+    # send the mail using mutt (without attachment)
+    cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
+
+}
+
+#runtime () {
+#
+#    runtime_sec=$(( $(date +%s) - start_time ))
+#    runtime_min=$(( runtime_sec / 60 ))
+#    printf 'Runtime: %s\n' "$runtime_min" | tee -a "$archive_body"
+#    printf 'Runtime: %s minutes\n' "$runtime_min" | tee -a "$archive_body"
+#    
+#}
 
 ## END FUNCTIONS
 
