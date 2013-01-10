@@ -99,8 +99,8 @@ eval_main_menu_choice () {
     esac
             
     # regardless of default/custom, we ask for report mode and whether to send email report
-    until [[ "$report_mode" = @(yes|no) ]]; do read -p "Run in Report-only mode? - No changes to the system will be made (yes/no)? " report_mode; done
-    until [[ "$email_report" = @(yes|no) ]]; do read -p "Send email report (yes/no)? " email_report; done
+    until [[ "$report_mode" = @(y|n) ]]; do read -p "Run in Report-only mode? - No changes to the system will be made (y/n)? " report_mode; done
+    until [[ "$email_report" = @(y|n) ]]; do read -p "Send email report (y/n)? " email_report; done
 
     # make sure these params are all OK
     validate_params
@@ -133,10 +133,10 @@ Send Email Report: ${email_report}
 
 EOT
 
-read -p "Confirm Settings (y/n)?" confirm_settings
+read -p "Confirm Settings and begin (yes/no)?" confirm_settings
 
 # if user does not confirm, we return to main menu
-[[ "$confirm_settings" = "y" ]] || main_menu
+[[ "$confirm_settings" = "yes" ]] || main_menu
 
 clear
 
