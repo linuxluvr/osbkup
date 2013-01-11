@@ -1,2 +1,14 @@
-/Volumes/9TB_SAN/New Structure/Labels_Hangtags2
+/Volumes/9TB_SAN/New Structure/Archives
+/Volumes/9TB_SAN/New Structure/Catalogs
+/Volumes/9TB_SAN/New Structure/Design
+/Volumes/9TB_SAN/New Structure/Design transfer
+/Volumes/9TB_SAN/New Structure/Fonts
 /Volumes/9TB_SAN/New Structure/India
+/Volumes/9TB_SAN/New Structure/Jerseys
+/Volumes/9TB_SAN/New Structure/Labels_Hangtags
+/Volumes/9TB_SAN/New Structure/Labels_Hangtags2
+/Volumes/9TB_SAN/New Structure/Logos_Color Stds
+/Volumes/9TB_SAN/New Structure/Reference Numbers
+/Volumes/9TB_SAN/New Structure/Samples
+/Volumes/9TB_SAN/New Structure/Submissions
+/Volumes/9TB_SAN/New Structure/Vertis
