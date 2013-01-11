@@ -157,7 +157,7 @@ do_my_bidding () {
 
 run_script () {
 
-    begin_time=$(date "+%s")
+    begin_time=$(date +%s)
 
     # read in the text file containing the directories to archive, store in the array dirs_to_archive
     declare -a dirs_to_archive
@@ -302,13 +302,14 @@ mail_the_report () {
     printf "\n\nFor a detailed CSV breakdown by directory, please visit the OSXServer directory http://osxserve/logs/ or http://192.168.168.13/logs/\n\n" >> "$archive_body"
 
     # calculate end time, do conversions for output like 35h:33m:13s to insert into email body
-    total_sec=$(( $(date +%s) - start_time ))
+    end_time=$(date +%s)
+    total_sec=$((end_time - begin_time))
 
     ((runtime_h=total_sec/3600))
     ((runtime_m=total_sec%3600/60))
     ((runtime_s=total_sec%60))
 
-    printf "Total Runtime: %dh:%dm:%ds" "$runtime_h" "$runtime_m" "$runtime_s" >> "$archive_body"
+    printf 'Total Runtime: %dh:%dm:%ds' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
     
     # send the mail using mutt
     cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
