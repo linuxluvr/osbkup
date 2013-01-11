@@ -99,8 +99,8 @@ eval_main_menu_choice () {
     esac
             
     # regardless of default/custom, we ask for report mode and whether to send email report
-    until [[ "$report_mode" = @(yes|no) ]]; do read -p "Run in Report-only mode - No changes to the system will be made (yes/no)? " report_mode; done
-    until [[ "$email_report" = @(yes|no) ]]; do read -p "Send email report (yes/no)? " email_report; done
+    until [[ "$report_mode" = @(y|n) ]]; do read -p "Run in Report-only mode? - No changes to the system will be made (y/n)? " report_mode; done
+    until [[ "$email_report" = @(y|n) ]]; do read -p "Send email report (y/n)? " email_report; done
 
     # make sure these params are all OK
     validate_params
@@ -133,10 +133,12 @@ Send Email Report: ${email_report}
 
 EOT
 
-read -p "Confirm Settings (y/n)?" confirm_settings
+read -p "Confirm Settings and begin (yes/no)?" confirm_settings
 
 # if user does not confirm, we return to main menu
-[[ "$confirm_settings" = "y" ]] || main_menu
+[[ "$confirm_settings" = "yes" ]] || main_menu
+
+clear
 
 run_script
 
@@ -276,7 +278,7 @@ run_script () {
     printf '\n%-25s %-6s\n' "TOTAL SAVINGS" "$grandtotal_gb" | tee -a "$archive_body"
 
     # are we emailing the report?
-    [[ $email_report = "yes" ]] && mail_the_report
+    [[ $email_report = "y" ]] && mail_the_report
 
     # WE ARE DONE WITH THE SCRIPT HERE, EXIT CLEAN
     exit 0
@@ -289,10 +291,10 @@ mail_the_report () {
 
     # Set email parameters
     mail_to=("ghalevy@gmail.com")
-    #mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
+    mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
     #mail_cc='ameir@outerstuff.com'
     #mail_cc='walker@designtechnyc.com,sjaradi@me.com,ameir@outerstuff.com'
-    mail_cc='caghal@gmail.com'
+    mail_cc='ghalevy@gmail.com'
     mail_from='osarchive@outerstuff.com'
     mail_subject="Archive Summary for $mail_date"
 
