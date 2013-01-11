@@ -171,7 +171,6 @@ run_script () {
     grandtotal=0
 
     # print archive body headers
-    printf "Begin time: %s\n\n" "$begin_time" | tee -a "$archive_body"
     printf "Files not modified in the past %s days\n\n" "$mtime_days" | tee -a "$archive_body"
     printf '%-25s %-6s\n' "DIRECTORY" "SIZE" | tee -a "$archive_body"
     printf '%-25s %-6s\n' "---------" "----" | tee -a "$archive_body"
@@ -209,6 +208,9 @@ run_script () {
             filepath_relative="${file#"$source_base"}"
             filename_extension="${file##*.}"
             filename_bn="${file##*/}"
+
+            # process exclusions like .DS_Store
+            [[ $filename_bn = ".DS_Store" ]] && continue
 
             # generate a parseable stat output for variable initialization
             stat_out="$(stat -t "%Y-%m-%d_%H:%M" "$file")"
@@ -297,20 +299,20 @@ mail_the_report () {
     # print link to download detailed log report CSV files
     printf "\n\nFor a detailed CSV breakdown by directory, please visit the OSXServer directory http://osxserve/logs/ or http://192.168.168.13/logs/\n\n" >> "$archive_body"
 
+    # calculate end time, do conversions for output like 35h:33m:13s to insert into email body
+    total_sec=$(( $(date +%s) - start_time ))
+
+    ((runtime_h=total_sec/3600))
+    ((runtime_m=total_sec%3600/60))
+    ((runtime_s=total_sec%60))
+
+    printf "Total Runtime: %dh:%dm:%ds" "$runtime_h" "$runtime_m" "$runtime_s" >> "$archive_body"
+    
     # send the mail using mutt
     cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
 
 }
 
-#runtime () {
-#
-#    runtime_sec=$(( $(date +%s) - start_time ))
-#    runtime_min=$(( runtime_sec / 60 ))
-#    runtime_hours=$(( runtime_min / 60 ))
-#    printf 'Runtime: %s\n' "$runtime_min" | tee -a "$archive_body"
-#    printf 'Runtime: %s minutes\n' "$runtime_min" | tee -a "$archive_body"
-#    
-#}
 
 ## END FUNCTIONS
 
