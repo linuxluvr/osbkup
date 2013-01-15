@@ -10,9 +10,12 @@ main_dir='/opt/osbkup'
 log_dir="${main_dir}/logs"
 archive_body="${main_dir}/archive_body"
 archive_log="${main_dir}/archive.log"
+tmp_settings="${main_dir}/tmp_settings"
+
+[[ -d "$log_dir" ]] || mkdir -p "$log_dir"
 [[ -f "$archive_body" ]] && >"$archive_body"
 [[ -f "$archive_log" ]] && >"$archive_log"
-[[ -d "$log_dir" ]] || mkdir -p "$log_dir"
+[[ -f "$tmp_settings" ]] && >"$tmp_settings"
 
 
 ## BEGIN FUNCTIONS 
@@ -112,7 +115,7 @@ validate_params () {
 
 clear
 
-cat <<-EOT
+tee "$tmp_settings" <<-EOT
 
 *************************************************************
 
@@ -140,7 +143,8 @@ read -p "Confirm Settings and begin (yes/no)?" confirm_settings
 
 clear
 
-run_script
+# assuming user confirmed, print the selected settings as a header to archive_body and proceed to run the script
+cat "$tmp_settings" >> "$archive_body" && run_script
 
 }
 
@@ -236,11 +240,11 @@ run_script () {
             "$filepath_relative" "$filename_bn" "$filename_extension" "$f_owner" "$f_group" "$f_filesize" "$f_atime" "$f_mtime" "$f_ctime" | tee -a "$dir_log"
 
             # Are we running in report_only mode?  If not, do_my_bidding function will be called
-            if [[ $report_mode = "yes" ]]; then
+            if [[ $report_mode = "y" ]]; then
 
                 continue
 
-            elif [[ $report_mode = "no" ]]; then
+            elif [[ $report_mode = "n" ]]; then
 
                 do_my_bidding
 
