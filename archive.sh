@@ -296,9 +296,9 @@ mail_the_report () {
     # Set email parameters
     mail_to=("ghalevy@gmail.com")
     mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
-    #mail_cc='ameir@outerstuff.com'
+    mail_cc='ameir@outerstuff.com'
     #mail_cc='walker@designtechnyc.com,sjaradi@me.com,ameir@outerstuff.com'
-    mail_cc='ghalevy@gmail.com'
+    #mail_cc='ghalevy@gmail.com'
     mail_from='osarchive@outerstuff.com'
     mail_subject="Archive Summary for $mail_date"
 
