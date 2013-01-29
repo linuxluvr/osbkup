@@ -45,7 +45,7 @@ dirs_to_bkup=(
     "$rsync_source_base_9TB_SAN/Submissions"
     "$rsync_source_base_9TB_SAN/Jerseys"
     "$rsync_source_base_9TB_SAN/Design"
-#   "$rsync_source_base_9TB_SAN/Design transfer"
+##   "$rsync_source_base_9TB_SAN/Design transfer"
     "$rsync_source_base_9TB_SAN/Archives"
     "$rsync_source_base_9TB_SAN/Catalogs"
     "$rsync_source_base_9TB_SAN/Vertis"
@@ -89,37 +89,26 @@ backup_server () {
 
             # set the rsync flags below
             rsync_flags=(
-                        "--recursive"
-                        "--perms"
-                        "--links"
-                        "--owner"
-                        "--times"
+                        "--archive"
                         "--verbose"
-                        "--group"
-                        "--devices"
-                        "--specials"
                         "--numeric-ids"
                         "--compress"
                         "--compress-level=1"
                         "--human-readable"
                         "--partial"
-                        "--inplace"
                         "--stats"
-                        "--progress"
                         "--delete"
-                        "--delete-after"
                         "--delete-excluded"
-                        #"--itemize-changes"
+                        "--itemize-changes"
                         "-E"
                         )
                         # Unused parameters
                         #--dry-run \
                         #--size-only \
                         #--ignore-existing \
-                        #--itemize-changes \
 
             # run the rsync job
-            rsync "${rsync_flags[@]}" "$exclusions" "$source_path" "$rsync_target_base" | tee -a "$rsync_log"
+            rsync "${rsync_flags[@]}" "$exclusions" "$source_path" "$rsync_target_base" >>"$rsync_log" 2>&1
 
             rsync_exit_code=${PIPESTATUS[0]}
 
