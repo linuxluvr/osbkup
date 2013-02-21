@@ -181,6 +181,9 @@ run_script () {
     printf '%-25s %-6s\n' "DIRECTORY" "SIZE" | tee -a "$archive_body"
     printf '%-25s %-6s\n' "---------" "----" | tee -a "$archive_body"
 
+    # set directory date
+    rundir_date=$(date "+%Y-%m-%d_%H:%M")
+
     # begin looping over dirs and processing
     for top_level_dir in "${dirs_to_archive[@]}"; do
 
@@ -194,7 +197,7 @@ run_script () {
         bn_dir="${top_level_dir##*/}"
 
         # set log file location for dir
-        dir_log="${log_dir}/${bn_dir}.csv"
+        dir_log="${log_dir}/${rundir_date}/${bn_dir}.csv"
 
         # initialize log file for top level dir and print header
         [[ -f "$dir_log" ]] && >"$dir_log"
