@@ -211,6 +211,8 @@ run_script () {
         # read in the results of find, tally size, determine whether to run 'do_my_bidding'
         while IFS= read -rd '' file; do
 
+            # skip if we do not have write access to the file or it is a phantom
+            [[ -w "$file" ]] && continue
             # setup parameters for use inside loop, self explanatory.  Filepath_relative strips out leading '/Volumes/9TB_SAN/New Structure'...
             # note that filename, extension is questionable if the file has no extension we have no way of programatically knowing
             source_dir="${file%/*}"

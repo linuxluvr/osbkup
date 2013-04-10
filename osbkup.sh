@@ -45,7 +45,7 @@ dirs_to_bkup=(
     "$rsync_source_base_9TB_SAN/Submissions"
     "$rsync_source_base_9TB_SAN/Jerseys"
     "$rsync_source_base_9TB_SAN/Design"
-##   "$rsync_source_base_9TB_SAN/Design transfer"
+#   "$rsync_source_base_9TB_SAN/Design transfer"
     "$rsync_source_base_9TB_SAN/Archives"
     "$rsync_source_base_9TB_SAN/Catalogs"
     "$rsync_source_base_9TB_SAN/Vertis"
