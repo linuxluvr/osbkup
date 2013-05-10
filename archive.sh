@@ -330,7 +330,7 @@ mail_the_report () {
     ((runtime_s=total_sec%60))
 
     printf 'Total Runtime: %dh:%dm:%ds\n' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
-    printf 'Total Files: \n\n%s\n' "$total_files" | tee -a "$archive_body"
+    printf '\nTotal Files: \n%s\n' "$total_files" | tee -a "$archive_body"
     
     # send the mail using mutt
     cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
