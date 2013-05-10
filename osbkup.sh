@@ -97,8 +97,8 @@ backup_server () {
                         "--human-readable"
                         "--partial"
                         "--stats"
-                        "--delete"
-                        "--delete-excluded"
+                        #"--delete"
+                        #"--delete-excluded"
                         "--itemize-changes"
                         "-E"
                         )

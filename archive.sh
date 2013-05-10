@@ -299,13 +299,23 @@ mail_the_report () {
     mail_date=$(date "+%m-%d-%y")
 
     # Set email parameters
-    mail_to=("ghalevy@gmail.com")
-    mail_to=("elid@outerstuff.com" "ghalevy@gmail.com")
+    #mail_to=("ghalevy@gmail.com")
+    mail_to=("elid@outerstuff.com" "ghalevy@gmail.com", "walker@designtechnyc.com", "sjaradi@me.com")
     mail_cc='ameir@outerstuff.com'
     #mail_cc='walker@designtechnyc.com,sjaradi@me.com,ameir@outerstuff.com'
     #mail_cc='ghalevy@gmail.com'
     mail_from='osarchive@outerstuff.com'
-    mail_subject="Archive Summary for $mail_date"
+
+    #set subject based on report mode
+    if [[ $report_mode = "y" ]]; then
+
+        mail_subject="Archive Summary (REPORT MODE) for $mail_date"
+
+    elif [[ $report_mode = "n" ]]; then
+
+        mail_subject="Archive Summary (PRODUCTION) for $mail_date"
+
+    fi
 
     # print link to download detailed log report CSV files
     printf "\n\nFor a detailed CSV breakdown by directory, please visit the OSXServer directory http://osxserve/logs/ or http://192.168.168.13/logs/\n\n" >> "$archive_body"
@@ -313,12 +323,14 @@ mail_the_report () {
     # calculate end time, do conversions for output like 35h:33m:13s to insert into email body
     end_time=$(date +%s)
     total_sec=$((end_time - begin_time))
+    total_files=$(wc -l "${run_dir}/"*.csv)  
 
     ((runtime_h=total_sec/3600))
     ((runtime_m=total_sec%3600/60))
     ((runtime_s=total_sec%60))
 
-    printf 'Total Runtime: %dh:%dm:%ds' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
+    printf 'Total Runtime: %dh:%dm:%ds\n' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
+    printf 'Total Files: \n\n%s\n' "$total_files" | tee -a "$archive_body"
     
     # send the mail using mutt
     cat "$archive_body" | /opt/local/bin/mutt -s "$mail_subject" -c "$mail_cc" "${mail_to[@]}"
