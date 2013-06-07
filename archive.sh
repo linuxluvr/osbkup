@@ -2,7 +2,6 @@
 
 # script options
 shopt -s extglob
-set -e
 set -u
 
 ## Globals
@@ -211,6 +210,9 @@ run_script () {
         # read in the results of find, tally size, determine whether to run 'do_my_bidding'
         while IFS= read -rd '' file; do
 
+            # global exclusions
+            [[ $file = *.AppleDouble* ]] && continue
+
             # setup parameters for use inside loop, self explanatory.  Filepath_relative strips out leading '/Volumes/9TB_SAN/New Structure'...
             # note that filename, extension is questionable if the file has no extension we have no way of programatically knowing
             source_dir="${file%/*}"
@@ -329,7 +331,7 @@ mail_the_report () {
     ((runtime_m=total_sec%3600/60))
     ((runtime_s=total_sec%60))
 
-    printf 'Total Runtime: %dh:%dm:%ds\n' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
+    printf '\nTotal Runtime: %dh:%dm:%ds\n' "$runtime_h" "$runtime_m" "$runtime_s" | tee -a "$archive_body"
     printf '\nTotal Files: \n%s\n' "$total_files" | tee -a "$archive_body"
     
     # send the mail using mutt

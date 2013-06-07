@@ -4,10 +4,7 @@
 ## This is a backup script for OSNYMAC XServer files.  It should be
 ## run out of cron daily.  It creates backups directly on osnjnas01.
 ##
-## Features to add:
-## 	* Old archives will be truncated and removed after 7 days.
-##
-## For any maintenance requests, contact Gilad Halevy.ghalevy@gmail.com
+## For any maintenance requests, contact Gilad Halevy (ghalevy@gmail.com)
 ##
 ## Last update: 08/06/2012
 ## Last modified by: GH
@@ -45,7 +42,6 @@ dirs_to_bkup=(
     "$rsync_source_base_9TB_SAN/Submissions"
     "$rsync_source_base_9TB_SAN/Jerseys"
     "$rsync_source_base_9TB_SAN/Design"
-##   "$rsync_source_base_9TB_SAN/Design transfer"
     "$rsync_source_base_9TB_SAN/Archives"
     "$rsync_source_base_9TB_SAN/Catalogs"
     "$rsync_source_base_9TB_SAN/Vertis"
@@ -97,8 +93,8 @@ backup_server () {
                         "--human-readable"
                         "--partial"
                         "--stats"
-                        #"--delete"
-                        #"--delete-excluded"
+                        "--delete"
+                        "--delete-excluded"
                         "--itemize-changes"
                         "-E"
                         )
